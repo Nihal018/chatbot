@@ -1,18 +1,36 @@
 "use client";
 
 import { useChat } from "ai/react";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, FormEvent } from "react";
 import { SendIcon, User, Bot } from "lucide-react";
+import { VscStopCircle } from "react-icons/vsc";
+import Image from "next/image";
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    maxSteps: 5,
-  });
+  const { messages, input, handleInputChange, handleSubmit, isLoading, stop } =
+    useChat({
+      maxSteps: 5,
+    });
+
+  const [files, setFiles] = useState<FileList | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    handleSubmit(event, {
+      experimental_attachments: files,
+    });
+
+    setFiles(undefined);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   useEffect(() => {
@@ -65,7 +83,24 @@ export default function Chat() {
                       {JSON.stringify(m.toolInvocations, null, 2)}
                     </pre>
                   ) : (
-                    <p className="whitespace-pre-wrap">{m.content}</p>
+                    <div>
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+                      <div>
+                        {m.experimental_attachments
+                          ?.filter((attachment) =>
+                            (attachment.contentType ?? "").startsWith("image/")
+                          )
+                          .map((attachment, index) => (
+                            <Image
+                              key={`${m.id}-${index}`}
+                              src={attachment.url}
+                              alt={attachment.name || ""}
+                              width={500}
+                              height={500}
+                            />
+                          ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -83,7 +118,7 @@ export default function Chat() {
       </div>
 
       <div className="border-t border-gray-200 bg-white p-4">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+        <form onSubmit={onSubmit} className="max-w-4xl mx-auto">
           <div className="relative">
             <input
               className="w-full p-3 pr-12 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
@@ -91,12 +126,36 @@ export default function Chat() {
               placeholder="Type your message..."
               onChange={handleInputChange}
             />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-blue-500 transition-colors"
-            >
-              <SendIcon className="w-5 h-5" />
-            </button>
+
+            <input
+              type="file"
+              onChange={(event) => {
+                if (event.target.files) {
+                  setFiles(event.target.files);
+                }
+              }}
+              multiple
+              ref={fileInputRef}
+            />
+
+            {isLoading ? (
+              <div>
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => stop()}
+                >
+                  <VscStopCircle className=" w-6 h-6" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-blue-500 transition-colors"
+              >
+                <SendIcon className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </form>
       </div>
