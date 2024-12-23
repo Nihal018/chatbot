@@ -5,6 +5,7 @@ import { useRef, useEffect, useState, FormEvent } from "react";
 import { SendIcon, User, Bot } from "lucide-react";
 import { VscStopCircle } from "react-icons/vsc";
 import Image from "next/image";
+import { MdAttachFile } from "react-icons/md";
 
 export default function Chat() {
   const { messages, input, handleInputChange, handleSubmit, isLoading, stop } =
@@ -24,6 +25,7 @@ export default function Chat() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     handleSubmit(event, {
       experimental_attachments: files,
+      allowEmptySubmit: true,
     });
 
     setFiles(undefined);
@@ -39,7 +41,7 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 text-black">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-4">
@@ -79,7 +81,7 @@ export default function Chat() {
                   }`}
                 >
                   {m.toolInvocations ? (
-                    <pre className="whitespace-pre-wrap text-sm">
+                    <pre className="whitespace-pre-wrap text-sm text-black">
                       {JSON.stringify(m.toolInvocations, null, 2)}
                     </pre>
                   ) : (
@@ -95,8 +97,8 @@ export default function Chat() {
                               key={`${m.id}-${index}`}
                               src={attachment.url}
                               alt={attachment.name || ""}
-                              width={500}
-                              height={500}
+                              width={300}
+                              height={300}
                             />
                           ))}
                       </div>
@@ -119,43 +121,54 @@ export default function Chat() {
 
       <div className="border-t border-gray-200 bg-white p-4">
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto">
-          <div className="relative">
+          <div className="relative flex items-center">
             <input
-              className="w-full p-3 pr-12 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full p-3 pr-20 border border-gray-200 rounded-lg 
+              text-black
+                   focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={input}
               placeholder="Type your message..."
               onChange={handleInputChange}
             />
 
-            <input
-              type="file"
-              onChange={(event) => {
-                if (event.target.files) {
-                  setFiles(event.target.files);
-                }
-              }}
-              multiple
-              ref={fileInputRef}
-            />
+            <div className="absolute right-12 ">
+              <div className="relative ">
+                <input
+                  type="file"
+                  className="absolute inset-0 w-full h-full opacity-0 "
+                  onChange={(event) => {
+                    if (event.target.files) {
+                      setFiles(event.target.files);
+                    }
+                  }}
+                  multiple
+                  ref={fileInputRef}
+                  aria-label="Attach files"
+                />
+                <div className="p-2 text-gray-400 hover:text-gray-600 transition-colors ">
+                  <MdAttachFile className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
 
-            {isLoading ? (
-              <div>
+            <div className="absolute right-2">
+              {isLoading ? (
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                   onClick={() => stop()}
                 >
-                  <VscStopCircle className=" w-6 h-6" />
+                  <VscStopCircle className="w-6 h-6" />
                 </button>
-              </div>
-            ) : (
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-blue-500 transition-colors"
-              >
-                <SendIcon className="w-5 h-5" />
-              </button>
-            )}
+              ) : (
+                <button
+                  type="submit"
+                  className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                >
+                  <SendIcon className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
         </form>
       </div>
