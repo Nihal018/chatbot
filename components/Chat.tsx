@@ -1,14 +1,15 @@
 "use client";
 
 import { useRef, useEffect, useState, FormEvent } from "react";
-import { SendIcon, User, Bot } from "lucide-react";
+import { SendIcon, User, Bot, Menu } from "lucide-react";
 import { VscStopCircle } from "react-icons/vsc";
 import { MdAttachFile } from "react-icons/md";
 import Image from "next/image";
-
+import { ChatSidebar } from "../components/ChatSideBar";
 import { usePersistedChat } from "../hook/usePersistedChat";
 
-export default function Chat({ chatId }: { chatId?: number }) {
+export function Chat({ chatId }: { chatId?: number }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [files, setFiles] = useState<FileList | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,7 +37,16 @@ export default function Chat({ chatId }: { chatId?: number }) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Chat Area */}
+      <div className="bg-white border-b px-4 py-3 flex justify-between items-center">
+        <h1 className="text-2xl font-semibold text-gray-700 ml-10">AI Chat</h1>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 text-gray-700 hover:bg-gray-100 rounded-full"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto p-4 space-y-6 text-black">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -115,7 +125,6 @@ export default function Chat({ chatId }: { chatId?: number }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
       <div className="border-t border-gray-200 bg-white p-4">
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto">
           <div className="relative flex items-center">
@@ -168,6 +177,13 @@ export default function Chat({ chatId }: { chatId?: number }) {
           </div>
         </form>
       </div>
+
+      {isSidebarOpen && (
+        <ChatSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
