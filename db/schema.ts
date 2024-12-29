@@ -9,6 +9,7 @@ export const chatsTable = pgTable("chats", {
 export const messagesTable = pgTable("messages", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
+  role: text("role").notNull(),
   chatId: integer("chat_id")
     .notNull()
     .references(() => chatsTable.id, { onDelete: "cascade" }),

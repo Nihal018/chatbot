@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText, tool } from "ai";
 import { z } from "zod";
+import { createMessage } from "../../../db/queries/insert";
 
 export const maxDuration = 30;
 
@@ -47,7 +48,7 @@ const webSearch = tool({
 });
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, chatId } = await req.json();
 
   const result = streamText({
     model: openai("gpt-4o"),
@@ -58,6 +59,12 @@ When providing information from web search, always cite your sources with the UR
 
     tools: {
       webSearch,
+    },
+    onFinish: async ({ text }) => {
+      if (chatId) {
+        await createMessage(chatId, text, "assistant");
+        console.log("Message saved and received response");
+      }
     },
   });
 
