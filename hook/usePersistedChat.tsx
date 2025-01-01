@@ -1,21 +1,26 @@
 "use client";
 
-import { useChat, Message } from "ai/react";
+import { useChat } from "ai/react";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
 export function usePersistedChat(chatId?: number) {
   const router = useRouter();
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const { messages, input, handleInputChange, handleSubmit, ...rest } = useChat(
-    {
-      body: { chatId },
-      maxSteps: 5,
-      id: chatId?.toString(),
-    }
-  );
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    setMessages,
+    ...rest
+  } = useChat({
+    body: { chatId },
+    maxSteps: 5,
+    id: chatId?.toString(), // Important for maintaining chat context
+  });
 
+  // Load messages when chat ID changes or on first load
   useEffect(() => {
     let mounted = true;
 
@@ -23,11 +28,11 @@ export function usePersistedChat(chatId?: number) {
       if (chatId && !isInitialized) {
         try {
           const response = await fetch(`/api/chat/${chatId}`);
+          if (!response.ok) throw new Error("Failed to fetch messages");
+
           const existingMessages = await response.json();
           if (mounted) {
-            existingMessages.forEach((msg: Message) => {
-              rest.setMessages((prev) => [...prev, msg]);
-            });
+            setMessages(existingMessages);
             setIsInitialized(true);
           }
         } catch (error) {
@@ -40,7 +45,12 @@ export function usePersistedChat(chatId?: number) {
     return () => {
       mounted = false;
     };
-  }, [chatId, isInitialized, rest]);
+  }, [chatId, isInitialized, setMessages]);
+
+  // Reset initialization when chatId changes
+  useEffect(() => {
+    setIsInitialized(false);
+  }, [chatId]);
 
   const handleSubmitWithPersistence = useCallback(
     async (
@@ -90,13 +100,12 @@ export function usePersistedChat(chatId?: number) {
 
           handleSubmit(e, {
             experimental_attachments: options?.experimental_attachments,
+            body: { chatId: currentChatId },
           });
 
-          console.log("handleSubmit trigerred message sent to openai");
+          router.push(`/chat/${currentChatId}`);
 
-          setTimeout(() => {
-            router.push(`/chat/${currentChatId}`);
-          }, 300);
+          console.log("handleSubmit trigerred message sent to openai");
         } else {
           const messageResponse = await fetch(`/api/chat/${currentChatId}`, {
             method: "POST",
@@ -113,6 +122,7 @@ export function usePersistedChat(chatId?: number) {
 
           handleSubmit(e, {
             experimental_attachments: options?.experimental_attachments,
+            body: { chatId: currentChatId }, // Changed from data to body
           });
         }
       } catch (error) {

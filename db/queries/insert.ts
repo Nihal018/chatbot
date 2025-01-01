@@ -7,11 +7,14 @@ export async function createMessage(
   content: string,
   role: string
 ) {
+  console.log("Creating message:", { chatId, role }); // Debug log
   try {
     const [message] = await db
       .insert(messagesTable)
       .values({ chatId, content, role })
       .returning();
+
+    console.log("Message created:", message); // Debug log
 
     return NextResponse.json({
       message: "Message saved successfully",

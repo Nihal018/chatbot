@@ -1,6 +1,6 @@
 import { Chat } from "../components/Chat";
 
-export function HomePage() {
+export default function HomePage() {
   return (
     <main>
       <Chat />

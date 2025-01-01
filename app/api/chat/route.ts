@@ -46,9 +46,11 @@ const webSearch = tool({
     }
   },
 });
-
 export async function POST(req: Request) {
-  const { messages, chatId } = await req.json();
+  const body = await req.json();
+  const { messages, chatId } = body;
+
+  console.log("Request body:", body); // Debug log to see what's being received
 
   const result = streamText({
     model: openai("gpt-4o"),
@@ -56,14 +58,29 @@ export async function POST(req: Request) {
     system: `You are a helpful AI assistant. You have access to web search . 
 When a user asks for current information that you're not certain about, use the webSearch tool to find accurate information.
 When providing information from web search, always cite your sources with the URLs.`,
-
     tools: {
       webSearch,
     },
-    onFinish: async ({ text }) => {
-      if (chatId) {
+    onFinish: async (completion) => {
+      try {
+        console.log("onFinish triggered, chatId:", chatId);
+
+        if (!chatId) {
+          console.error("No chatId provided, body:", body);
+          return;
+        }
+
+        const text = completion.text || completion.toString();
+
+        if (!text) {
+          console.error("No text in completion");
+          return;
+        }
+
         await createMessage(chatId, text, "assistant");
-        console.log("Message saved and received response");
+        console.log("Assistant message saved successfully for chat:", chatId);
+      } catch (error) {
+        console.error("Error in onFinish:", error);
       }
     },
   });
