@@ -2,9 +2,8 @@
 
 import { useChat } from "ai/react";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+
 export function usePersistedChat(chatId?: number) {
-  const router = useRouter();
   const [isInitialized, setIsInitialized] = useState(false);
 
   const {
@@ -17,10 +16,9 @@ export function usePersistedChat(chatId?: number) {
   } = useChat({
     body: { chatId },
     maxSteps: 5,
-    id: chatId?.toString(), // Important for maintaining chat context
+    id: chatId?.toString(),
   });
 
-  // Load messages when chat ID changes or on first load
   useEffect(() => {
     let mounted = true;
 
@@ -47,7 +45,6 @@ export function usePersistedChat(chatId?: number) {
     };
   }, [chatId, isInitialized, setMessages]);
 
-  // Reset initialization when chatId changes
   useEffect(() => {
     setIsInitialized(false);
   }, [chatId]);
@@ -84,7 +81,6 @@ export function usePersistedChat(chatId?: number) {
           const chat = await response.json();
           currentChatId = chat.id;
 
-          // Save first message
           const messageResponse = await fetch(`/api/chat/${currentChatId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -98,12 +94,12 @@ export function usePersistedChat(chatId?: number) {
             throw new Error("Failed to save message");
           }
 
+          window.history.pushState({}, "", `/chat/${currentChatId}`);
+
           handleSubmit(e, {
             experimental_attachments: options?.experimental_attachments,
             body: { chatId: currentChatId },
           });
-
-          router.push(`/chat/${currentChatId}`);
 
           console.log("handleSubmit trigerred message sent to openai");
         } else {
@@ -122,14 +118,14 @@ export function usePersistedChat(chatId?: number) {
 
           handleSubmit(e, {
             experimental_attachments: options?.experimental_attachments,
-            body: { chatId: currentChatId }, // Changed from data to body
+            body: { chatId: currentChatId },
           });
         }
       } catch (error) {
         console.error("Error handling submit:", error);
       }
     },
-    [chatId, input, handleSubmit, router]
+    [chatId, input, handleSubmit]
   );
 
   return {

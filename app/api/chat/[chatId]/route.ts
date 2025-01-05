@@ -7,14 +7,14 @@ import { createMessage } from "../../../../db/queries/insert";
 
 export async function GET(
   req: Request,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   const { chatId } = await params;
   try {
     const messages = await db
       .select()
       .from(messagesTable)
-      .where(eq(messagesTable.chatId, parseInt(chatId)))
+      .where(eq(messagesTable.chatId, chatId))
       .orderBy(messagesTable.createdAt);
     return NextResponse.json(messages);
   } catch (error) {
@@ -41,7 +41,7 @@ export async function POST(
       );
     }
 
-    return createMessage(parseInt(chatId), content, role);
+    return createMessage(chatId, content, role);
   } catch (error) {
     console.error("Error creating message:", error);
     return NextResponse.json(
@@ -57,5 +57,5 @@ export async function DELETE(
 ) {
   const { chatId } = await params;
 
-  return deleteChat(parseInt(chatId));
+  return deleteChat(chatId);
 }
