@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText, tool } from "ai";
 import { z } from "zod";
-import { createMessage } from "../../../db/queries/insert";
+import { Message } from "@/db/models/Message";
 
 export const maxDuration = 30;
 
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { messages, chatId } = body;
 
-  console.log("Request body:", body); // Debug log to see what's being received
+  console.log("Request body:", body);
 
   const result = streamText({
     model: openai("gpt-4o"),
@@ -77,7 +77,8 @@ When providing information from web search, always cite your sources with the UR
           return;
         }
 
-        await createMessage(chatId, text, "assistant");
+        await Message.createMessage(chatId, text, "assistant");
+
         console.log("Assistant message saved successfully for chat:", chatId);
       } catch (error) {
         console.error("Error in onFinish:", error);

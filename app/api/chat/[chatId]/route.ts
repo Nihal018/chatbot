@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../db";
-import { messagesTable } from "../../../../db/schema";
-import { eq } from "drizzle-orm";
-import { deleteChat } from "../../../../db/queries/delete";
-import { createMessage } from "../../../../db/queries/insert";
+import { Message } from "@/db/models/Message";
+import { Chat } from "@/db/models/Chat";
 
 export async function GET(
   req: Request,
@@ -11,11 +8,7 @@ export async function GET(
 ) {
   const { chatId } = await params;
   try {
-    const messages = await db
-      .select()
-      .from(messagesTable)
-      .where(eq(messagesTable.chatId, chatId))
-      .orderBy(messagesTable.createdAt);
+    const messages = await Message.getChatMessages(chatId);
     return NextResponse.json(messages);
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -28,7 +21,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   const { chatId } = await params;
   try {
@@ -40,8 +33,7 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    return createMessage(chatId, content, role);
+    return await Message.createMessage(chatId, content, role);
   } catch (error) {
     console.error("Error creating message:", error);
     return NextResponse.json(
@@ -51,11 +43,12 @@ export async function POST(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { chatId: string } }
-) {
+export async function DELETE({
+  params,
+}: {
+  params: Promise<{ chatId: string }>;
+}) {
   const { chatId } = await params;
 
-  return deleteChat(chatId);
+  return Chat.delete(chatId);
 }
