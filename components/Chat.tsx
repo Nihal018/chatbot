@@ -7,6 +7,8 @@ import { MdAttachFile } from "react-icons/md";
 import Image from "next/image";
 import { ChatSidebar } from "../components/ChatSideBar";
 import { usePersistedChat } from "../hook/usePersistedChat";
+import { ChatInput } from "./chatUI/ChatInput";
+import { ChatflowLayout } from "./chatUI/ChatflowLayout";
 
 export function Chat({ chatId }: { chatId?: string }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -36,7 +38,8 @@ export function Chat({ chatId }: { chatId?: string }) {
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <ChatflowLayout onOpenSidebar={() => setIsSidebarOpen(true)}>
+      {/* <div className="flex flex-col h-screen bg-gray-50">
       <div className="bg-white border-b px-4 py-3 flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-700 ml-10">AI Chat</h1>
         <button
@@ -45,7 +48,7 @@ export function Chat({ chatId }: { chatId?: string }) {
         >
           <Menu className="w-5 h-5" />
         </button>
-      </div>
+      </div> */}
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6 text-black">
         {messages.length === 0 ? (
@@ -125,7 +128,7 @@ export function Chat({ chatId }: { chatId?: string }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-gray-200 bg-white p-4">
+      {/* <div className="border-t border-gray-200 bg-white p-4">
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto">
           <div className="relative flex items-center">
             <input
@@ -176,7 +179,15 @@ export function Chat({ chatId }: { chatId?: string }) {
             </div>
           </div>
         </form>
-      </div>
+      </div> */}
+      <ChatInput
+        chatId={chatId}
+        handleInputChange={handleInputChange}
+        input={input}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+        stop={stop}
+      />
 
       {isSidebarOpen && (
         <ChatSidebar
@@ -184,6 +195,6 @@ export function Chat({ chatId }: { chatId?: string }) {
           onClose={() => setIsSidebarOpen(false)}
         />
       )}
-    </div>
+    </ChatflowLayout>
   );
 }
