@@ -3,7 +3,7 @@
 import { useChat } from "ai/react";
 import { useState, useEffect, useCallback } from "react";
 
-export function usePersistedChat(chatId?: number) {
+export function usePersistedChat(chatId?: string) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   const {
@@ -16,7 +16,7 @@ export function usePersistedChat(chatId?: number) {
   } = useChat({
     body: { chatId },
     maxSteps: 5,
-    id: chatId?.toString(),
+    id: chatId,
   });
 
   useEffect(() => {

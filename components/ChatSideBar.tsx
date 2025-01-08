@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { MessageSquare, X, Trash2 } from "lucide-react";
 
 interface Chat {
-  id: number;
+  id: string;
   name: string;
   createdAt: string;
 }
@@ -35,12 +35,12 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   }, [isOpen]);
 
-  const handleChatClick = (chatId: number) => {
+  const handleChatClick = (chatId: string) => {
     router.push(`/chat/${chatId}`);
     onClose();
   };
 
-  const handleDeleteChat = async (chatId: number, e: React.MouseEvent) => {
+  const handleDeleteChat = async (chatId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       const response = await fetch(`/api/chat/${chatId}`, {

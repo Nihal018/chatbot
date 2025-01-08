@@ -8,7 +8,7 @@ import Image from "next/image";
 import { ChatSidebar } from "../components/ChatSideBar";
 import { usePersistedChat } from "../hook/usePersistedChat";
 
-export function Chat({ chatId }: { chatId?: number }) {
+export function Chat({ chatId }: { chatId?: string }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [files, setFiles] = useState<FileList | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);

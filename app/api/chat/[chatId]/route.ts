@@ -43,11 +43,14 @@ export async function POST(
   }
 }
 
-export async function DELETE({
-  params,
-}: {
-  params: Promise<{ chatId: string }>;
-}) {
+export async function DELETE(
+  req: Request,
+  {
+    params,
+  }: {
+    params: Promise<{ chatId: string }>;
+  }
+) {
   const { chatId } = await params;
 
   return Chat.delete(chatId);

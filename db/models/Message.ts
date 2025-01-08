@@ -28,10 +28,16 @@ export class Message {
   }
 
   static async getChatMessages(chatId: string) {
-    return await db
-      .select()
-      .from(messagesTable)
-      .where(eq(messagesTable.chatId, chatId))
-      .orderBy(messagesTable.createdAt);
+    try {
+      const messages = await db
+        .select()
+        .from(messagesTable)
+        .where(eq(messagesTable.chatId, chatId))
+        .orderBy(messagesTable.createdAt);
+      return messages;
+    } catch (error) {
+      console.error("Error getting messages:", error);
+      throw error;
+    }
   }
 }
