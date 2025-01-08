@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MessageSquare, X, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface Chat {
   id: string;
@@ -15,24 +16,38 @@ interface ChatSidebarProps {
   onClose: () => void;
 }
 
+type ChatHistoryState =
+  | { type: "loading" }
+  | { type: "error"; message: string }
+  | { type: "ready"; chats: Chat[] };
+
 export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [state, setState] = useState<ChatHistoryState>({ type: "loading" });
   const router = useRouter();
 
   useEffect(() => {
     async function fetchChats() {
+      if (!isOpen) return;
+
+      setState({ type: "loading" });
+
       try {
         const response = await fetch("/api/chat/list");
+        if (!response.ok) {
+          throw new Error("Failed to fetch chats");
+        }
         const data = await response.json();
-        setChats(data);
+        setState({ type: "ready", chats: data });
       } catch (error) {
         console.error("Error fetching chats:", error);
+        setState({
+          type: "error",
+          message: "Failed to load chat history. Please try again.",
+        });
       }
     }
 
-    if (isOpen) {
-      fetchChats();
-    }
+    fetchChats();
   }, [isOpen]);
 
   const handleChatClick = (chatId: string) => {
@@ -46,8 +61,11 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       const response = await fetch(`/api/chat/${chatId}`, {
         method: "DELETE",
       });
-      if (response.ok) {
-        setChats(chats.filter((chat) => chat.id !== chatId));
+      if (response.ok && state.type === "ready") {
+        setState({
+          type: "ready",
+          chats: state.chats.filter((chat) => chat.id !== chatId),
+        });
       }
     } catch (error) {
       console.error("Error deleting chat:", error);
@@ -62,6 +80,66 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       hour: "numeric",
       minute: "numeric",
     }).format(date);
+  };
+
+  const renderContent = () => {
+    switch (state.type) {
+      case "loading":
+        return (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          </div>
+        );
+
+      case "error":
+        return (
+          <div className="p-4 text-center">
+            <p className="text-red-500">{state.message}</p>
+            <button
+              onClick={() => setState({ type: "loading" })}
+              className="mt-2 text-blue-500 hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        );
+
+      case "ready":
+        if (state.chats.length === 0) {
+          return (
+            <div className="p-4 text-center text-gray-500">
+              No chat history yet
+            </div>
+          );
+        }
+
+        return state.chats.map((chat) => (
+          <div
+            key={chat.id}
+            onClick={() => handleChatClick(chat.id)}
+            className="p-3 hover:bg-gray-50 cursor-pointer border-b flex items-center justify-between group"
+          >
+            <div className="flex items-start space-x-3 flex-1 min-w-0">
+              <MessageSquare className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 truncate">
+                  {chat.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {formatDate(chat.createdAt)}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={(e) => handleDeleteChat(chat.id, e)}
+              className="p-2 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded-full transition-all"
+              aria-label="Delete chat"
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </button>
+          </div>
+        ));
+    }
   };
 
   return (
@@ -92,40 +170,7 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            {chats.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No chat history yet
-              </div>
-            ) : (
-              chats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => handleChatClick(chat.id)}
-                  className="p-3 hover:bg-gray-50 cursor-pointer border-b flex items-center justify-between group"
-                >
-                  <div className="flex items-start space-x-3 flex-1 min-w-0">
-                    <MessageSquare className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
-                        {chat.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {formatDate(chat.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => handleDeleteChat(chat.id, e)}
-                    className="p-2 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded-full transition-all"
-                    aria-label="Delete chat"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
+          <div className="flex-1 overflow-y-auto">{renderContent()}</div>
 
           <div className="p-4 border-t bg-gray-50">
             <button
