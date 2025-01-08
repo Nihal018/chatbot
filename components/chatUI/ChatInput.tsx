@@ -3,19 +3,30 @@ import { FormEvent, useRef, useState } from "react";
 import { MdAttachFile } from "react-icons/md";
 import { VscStopCircle } from "react-icons/vsc";
 
-type ChatInputProps = {
-  chatId?: string;
+interface ChatInputProps {
   input: string;
-};
+  handleInputChange: (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLTextAreaElement>
+  ) => void;
+  handleSubmit: (
+    e: React.FormEvent<HTMLFormElement>,
+    options?: {
+      experimental_attachments?: FileList;
+    }
+  ) => Promise<void>;
+  isLoading: boolean;
+  stop: () => void;
+}
 
 export function ChatInput({
-  chatId,
   input,
   handleInputChange,
   handleSubmit,
   isLoading,
   stop,
-}) {
+}: ChatInputProps) {
   const [files, setFiles] = useState<FileList | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
