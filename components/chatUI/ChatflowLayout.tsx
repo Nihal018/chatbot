@@ -10,8 +10,8 @@ export function ChatflowLayout({
   onOpenSidebar,
 }: ChatflowLayoutProps) {
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="bg-white border-b px-4 py-3 flex justify-between items-center">
+    <div className="flex flex-col h-screen bg-white">
+      <div className="bg-white px-4 py-3 flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-700 ml-10">AI Chat</h1>
         <button
           onClick={onOpenSidebar}

@@ -40,7 +40,7 @@ export function ChatInput({
     }
   };
   return (
-    <div className="border-t border-gray-200 bg-white p-4">
+    <div className="bg-white p-4">
       <form onSubmit={onSubmit} className="max-w-4xl mx-auto">
         <div className="relative flex items-center">
           <input
