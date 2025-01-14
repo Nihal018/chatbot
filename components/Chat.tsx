@@ -25,12 +25,10 @@ export function Chat({ chatId }: { chatId?: string }) {
         stop={stop}
       />
 
-      {isSidebarOpen && (
-        <ChatSidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
-      )}
+      <ChatSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
     </ChatflowLayout>
   );
 }

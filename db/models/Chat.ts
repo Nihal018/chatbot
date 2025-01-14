@@ -13,11 +13,7 @@ export class Chat {
     return id[0].id;
   }
   static async getAll() {
-    return await db
-      .select()
-      .from(chatsTable)
-      .orderBy(chatsTable.createdAt)
-      .limit(10);
+    return await db.select().from(chatsTable).orderBy(chatsTable.createdAt);
   }
 
   static async delete(chatId: string) {
