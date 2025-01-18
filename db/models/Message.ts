@@ -3,7 +3,7 @@ import { db } from "..";
 import { messagesTable } from "../schema";
 import { eq } from "drizzle-orm";
 
-export class Message {
+export class MessageDAO {
   static async createMessage(chatId: string, content: string, role: string) {
     console.log("Creating message:", { chatId, role });
     try {

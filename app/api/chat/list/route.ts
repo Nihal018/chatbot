@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { Chat } from "@/db/models/Chat";
+import { ChatDAO } from "@/db/models/Chat";
 
 export async function GET() {
   try {
-    const chats = await Chat.getAll();
+    const chats = await ChatDAO.getAll();
     return NextResponse.json(chats);
   } catch (error) {
     console.error("Error fetching chats:", error);
@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const { name } = await req.json();
   try {
-    const id = await Chat.create(name);
+    const id = await ChatDAO.create(name);
 
     return NextResponse.json({ id: id });
   } catch (error) {

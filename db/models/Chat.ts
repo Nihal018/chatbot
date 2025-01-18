@@ -3,7 +3,7 @@ import { db } from "..";
 import { chatsTable } from "../schema";
 import { eq } from "drizzle-orm";
 
-export class Chat {
+export class ChatDAO {
   static async create(name: string) {
     const id: { id: string }[] = await db
       .insert(chatsTable)

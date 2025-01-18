@@ -13,14 +13,33 @@ export function Chat({ chatId }: { chatId?: string }) {
   const { messages, input, handleInputChange, handleSubmit, isLoading, stop } =
     usePersistedChat(chatId);
 
+  // the handleInputChange and handleSubmit come from the useChat hook in the ai sdk so they expect events as input
+  const onInputChange = (text: string) => {
+    const syntheticEvent = {
+      target: { value: text },
+    } as React.ChangeEvent<HTMLInputElement>;
+
+    handleInputChange(syntheticEvent);
+  };
+
+  const onSubmit = async (options?: { files?: FileList }) => {
+    const syntheticEvent = {
+      preventDefault: () => {},
+    } as React.FormEvent<HTMLFormElement>;
+
+    await handleSubmit(syntheticEvent, {
+      experimental_attachments: options?.files,
+    });
+  };
+
   return (
     <ChatflowLayout onOpenSidebar={() => setIsSidebarOpen(true)}>
       <ChatMessages messages={messages} />
 
       <ChatInput
-        handleInputChange={handleInputChange}
+        handleInputChange={onInputChange}
         input={input}
-        handleSubmit={handleSubmit}
+        handleSubmit={onSubmit}
         isLoading={isLoading}
         stop={stop}
       />

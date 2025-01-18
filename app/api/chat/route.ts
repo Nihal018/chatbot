@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText, tool } from "ai";
 import { z } from "zod";
-import { Message } from "@/db/models/Message";
+import { MessageDAO } from "@/db/models/Message";
 
 export const maxDuration = 30;
 
@@ -83,7 +83,7 @@ When searching for current information:
           return;
         }
 
-        await Message.createMessage(chatId, text, "assistant");
+        await MessageDAO.createMessage(chatId, text, "assistant");
 
         console.log("Assistant message saved successfully for chat:", chatId);
       } catch (error) {

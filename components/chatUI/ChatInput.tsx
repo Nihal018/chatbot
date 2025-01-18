@@ -5,17 +5,8 @@ import { VscStopCircle } from "react-icons/vsc";
 
 interface ChatInputProps {
   input: string;
-  handleInputChange: (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>
-  ) => void;
-  handleSubmit: (
-    e: React.FormEvent<HTMLFormElement>,
-    options?: {
-      experimental_attachments?: FileList;
-    }
-  ) => Promise<void>;
+  handleInputChange: (text: string) => void;
+  handleSubmit: (options?: { files?: FileList }) => Promise<void>;
   isLoading: boolean;
   stop: () => void;
 }
@@ -31,13 +22,21 @@ export function ChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    handleSubmit(event, { experimental_attachments: files });
+    event.preventDefault();
+    await handleSubmit({ files });
 
     setFiles(undefined);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+  const onInputChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    handleInputChange(e.target.value);
   };
   return (
     <div className="bg-white p-4">
@@ -48,7 +47,7 @@ export function ChatInput({
               text-black focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             value={input}
             placeholder="Type your message..."
-            onChange={handleInputChange}
+            onChange={onInputChange}
           />
 
           <div className="absolute right-12 ">

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { Message } from "@/db/models/Message";
-import { Chat } from "@/db/models/Chat";
+import { MessageDAO } from "@/db/models/Message";
+import { ChatDAO } from "@/db/models/Chat";
 
 export async function GET(
   req: Request,
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { chatId } = await params;
   try {
-    const messages = await Message.getChatMessages(chatId);
+    const messages = await MessageDAO.getChatMessages(chatId);
     return NextResponse.json(messages);
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -33,7 +33,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    return await Message.createMessage(chatId, content, role);
+    return await MessageDAO.createMessage(chatId, content, role);
   } catch (error) {
     console.error("Error creating message:", error);
     return NextResponse.json(
@@ -53,5 +53,5 @@ export async function DELETE(
 ) {
   const { chatId } = await params;
 
-  return Chat.delete(chatId);
+  return ChatDAO.delete(chatId);
 }
