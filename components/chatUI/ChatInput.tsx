@@ -21,16 +21,19 @@ export function ChatInput({
   const [files, setFiles] = useState<FileList | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const submitMessage = async () => {
     await handleSubmit({ files });
-
     setFiles(undefined);
-
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await submitMessage();
+  };
+
   const onInputChange = (
     e:
       | React.ChangeEvent<HTMLInputElement>
@@ -48,6 +51,12 @@ export function ChatInput({
             value={input}
             placeholder="Type your message..."
             onChange={onInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                submitMessage();
+              }
+            }}
           />
 
           <div className="absolute right-12 ">
