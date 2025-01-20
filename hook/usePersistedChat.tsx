@@ -1,19 +1,18 @@
 "use client";
 
 import { useChat } from "ai/react";
-import { useState, useEffect, useCallback } from "react";
-
+import { useEffect } from "react";
+import { useChatPersistence } from "./useChatPersistence";
 export function usePersistedChat(chatId?: string) {
-  const [isInitialized, setIsInitialized] = useState(false);
-
   const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    setMessages,
-    ...rest
-  } = useChat({
+    loadMessages,
+    saveMessage,
+    createNewChat,
+    isInitialized,
+    setIsInitialized,
+  } = useChatPersistence(chatId);
+
+  const chat = useChat({
     body: { chatId },
     maxSteps: 5,
     id: chatId,
@@ -22,117 +21,44 @@ export function usePersistedChat(chatId?: string) {
   useEffect(() => {
     let mounted = true;
 
-    async function loadMessages() {
-      if (chatId && !isInitialized) {
-        try {
-          const response = await fetch(`/api/chat/${chatId}`);
-          if (!response.ok) throw new Error("Failed to fetch messages");
-
-          const existingMessages = await response.json();
-          if (mounted) {
-            setMessages(existingMessages);
-            setIsInitialized(true);
-          }
-        } catch (error) {
-          console.error("Error loading messages:", error);
+    if (chatId && !isInitialized) {
+      loadMessages().then((messages) => {
+        if (mounted && messages) {
+          chat.setMessages(messages);
+          setIsInitialized(true);
         }
-      }
+      });
     }
 
-    loadMessages();
     return () => {
       mounted = false;
     };
-  }, [chatId, isInitialized, setMessages]);
+  }, [chat, chatId, isInitialized]);
 
   useEffect(() => {
     setIsInitialized(false);
   }, [chatId]);
 
-  const handleSubmitWithPersistence = useCallback(
-    async (
-      e: React.FormEvent<HTMLFormElement>,
-      options?: { experimental_attachments?: FileList }
-    ) => {
-      e.preventDefault();
+  const handleSubmit = async (
+    e: React.FormEvent,
+    options?: { experimental_attachments?: FileList }
+  ) => {
+    e.preventDefault();
+    if (!chat.input.trim()) return;
 
-      if (
-        !input.trim() &&
-        (!options?.experimental_attachments ||
-          options.experimental_attachments.length === 0)
-      ) {
-        return;
+    try {
+      if (!chatId) {
+        const newChat = await createNewChat(chat.input.slice(0, 50));
+        await saveMessage(newChat.id, chat.input, "user");
+        chat.handleSubmit(e, { ...options, body: { chatId: newChat.id } });
+      } else {
+        await saveMessage(chatId, chat.input, "user");
+        chat.handleSubmit(e, { ...options, body: { chatId } });
       }
-
-      try {
-        let currentChatId = chatId;
-
-        if (currentChatId === undefined) {
-          const response = await fetch("/api/chat/list", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: input.slice(0, 50) }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to create chat");
-          }
-
-          const chat = await response.json();
-          currentChatId = chat.id;
-
-          const messageResponse = await fetch(`/api/chat/${currentChatId}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              content: input.trim(),
-              role: "user",
-            }),
-          });
-
-          if (!messageResponse.ok) {
-            throw new Error("Failed to save message");
-          }
-
-          window.history.pushState({}, "", `/chat/${currentChatId}`);
-
-          handleSubmit(e, {
-            experimental_attachments: options?.experimental_attachments,
-            body: { chatId: currentChatId },
-          });
-
-          console.log("handleSubmit trigerred message sent to openai");
-        } else {
-          const messageResponse = await fetch(`/api/chat/${currentChatId}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              content: input.trim(),
-              role: "user",
-            }),
-          });
-
-          if (!messageResponse.ok) {
-            throw new Error("Failed to save message");
-          }
-
-          handleSubmit(e, {
-            experimental_attachments: options?.experimental_attachments,
-            body: { chatId: currentChatId },
-          });
-        }
-      } catch (error) {
-        console.error("Error handling submit:", error);
-      }
-    },
-    [chatId, input, handleSubmit]
-  );
-
-  return {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit: handleSubmitWithPersistence,
-    ...rest,
+    } catch (error) {
+      console.error("Error handling submit:", error);
+    }
   };
+
+  return { ...chat, handleSubmit };
 }
