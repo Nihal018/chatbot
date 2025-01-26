@@ -1,27 +1,27 @@
 "use client";
 
 import { useChat } from "ai/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useChatPersistence } from "./useChatPersistence";
-export function usePersistedChat(chatId?: string) {
+export function usePersistedChat(initialChatId?: string) {
+  const [currentChatId, setCurrentChatId] = useState(initialChatId);
   const {
     loadMessages,
     saveMessage,
     createNewChat,
     isInitialized,
     setIsInitialized,
-  } = useChatPersistence(chatId);
+  } = useChatPersistence(currentChatId);
 
   const chat = useChat({
-    body: { chatId },
+    body: { chatId: currentChatId },
     maxSteps: 5,
-    id: chatId,
+    id: currentChatId,
   });
-
   useEffect(() => {
     let mounted = true;
 
-    if (chatId && !isInitialized) {
+    if (currentChatId && !isInitialized) {
       loadMessages().then((messages) => {
         if (mounted && messages) {
           chat.setMessages(messages);
@@ -33,11 +33,11 @@ export function usePersistedChat(chatId?: string) {
     return () => {
       mounted = false;
     };
-  }, [chat, chatId, isInitialized]);
+  }, [chat, currentChatId, isInitialized, loadMessages, setIsInitialized]);
 
   useEffect(() => {
     setIsInitialized(false);
-  }, [chatId]);
+  }, [setIsInitialized]);
 
   const handleSubmit = async (
     e: React.FormEvent,
@@ -47,13 +47,15 @@ export function usePersistedChat(chatId?: string) {
     if (!chat.input.trim()) return;
 
     try {
-      if (!chatId) {
+      if (!currentChatId) {
         const newChat = await createNewChat(chat.input.slice(0, 50));
         await saveMessage(newChat.id, chat.input, "user");
+        window.history.pushState({}, "", `/chat/${newChat.id}`);
+        setCurrentChatId(newChat.id);
         chat.handleSubmit(e, { ...options, body: { chatId: newChat.id } });
       } else {
-        await saveMessage(chatId, chat.input, "user");
-        chat.handleSubmit(e, { ...options, body: { chatId } });
+        await saveMessage(currentChatId, chat.input, "user");
+        chat.handleSubmit(e, { ...options, body: { chatId: currentChatId } });
       }
     } catch (error) {
       console.error("Error handling submit:", error);

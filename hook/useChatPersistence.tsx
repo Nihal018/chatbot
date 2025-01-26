@@ -29,7 +29,6 @@ export function useChatPersistence(chatId?: string) {
       body: JSON.stringify({ name }),
     });
     const chat = await response.json();
-    window.history.pushState({}, "", `/chat/${chat.id}`);
     return chat;
   };
 
