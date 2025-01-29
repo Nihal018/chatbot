@@ -49,13 +49,19 @@ export function usePersistedChat(initialChatId?: string) {
     try {
       if (!currentChatId) {
         const newChat = await createNewChat(chat.input.slice(0, 50));
+        chat.handleSubmit(e, {
+          experimental_attachments: options?.experimental_attachments,
+          body: { chatId: newChat.id },
+        });
         await saveMessage(newChat.id, chat.input, "user");
         window.history.pushState({}, "", `/chat/${newChat.id}`);
         setCurrentChatId(newChat.id);
-        chat.handleSubmit(e, { ...options, body: { chatId: newChat.id } });
       } else {
+        chat.handleSubmit(e, {
+          experimental_attachments: options?.experimental_attachments,
+          body: { chatId: currentChatId },
+        });
         await saveMessage(currentChatId, chat.input, "user");
-        chat.handleSubmit(e, { ...options, body: { chatId: currentChatId } });
       }
     } catch (error) {
       console.error("Error handling submit:", error);
