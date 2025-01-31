@@ -172,7 +172,7 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
           <div className="flex-1 overflow-y-auto">{renderContent()}</div>
 
-          <div className="p-4 border-t bg-white">
+          <div className="p-4  bg-white">
             <button
               onClick={() => router.push("/")}
               className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"

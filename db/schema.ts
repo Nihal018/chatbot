@@ -1,4 +1,10 @@
-import { uuid, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { uuid, pgTable, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+
+interface FileMetadata {
+  name: string;
+  url: string;
+  contentType: string;
+}
 
 export const chatsTable = pgTable("chats", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -14,6 +20,7 @@ export const messagesTable = pgTable("messages", {
     .notNull()
     .references(() => chatsTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  files: jsonb("files").$type<FileMetadata[]>(),
 });
 
 export type InsertChat = typeof chatsTable.$inferInsert;
